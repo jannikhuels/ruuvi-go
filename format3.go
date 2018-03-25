@@ -3,6 +3,7 @@ package ruuvi
 import (
 	"bytes"
 	"encoding/binary"
+	"log"
 
 	"github.com/paypal/gatt"
 )
@@ -39,9 +40,12 @@ func (s RuuviSensorFormat3) GetSensorData(a *gatt.Advertisement) *RuuviSensorDat
 	reader := bytes.NewReader(a.ManufacturerData)
 	result := RuuviSensorFormat3{}
 	err := binary.Read(reader, binary.BigEndian, &result)
+
 	if err != nil {
-		panic(err)
+		log.Println("Error reading sensor data: ", err)
+		return nil
 	}
+
 	sensorData := RuuviSensorData{}
 	sensorData.Temperature = parseTemperature(result.Temperature, result.TemperatureFraction)
 	sensorData.Humidity = float64(result.Humidity) / 2.0

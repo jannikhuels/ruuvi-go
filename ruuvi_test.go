@@ -10,7 +10,7 @@ func getAdvertisement(om RuuviOperationMode) gatt.Advertisement {
 	if om == RAW {
 		return gatt.Advertisement{ManufacturerData: []byte{153, 4, 3, 64, 23, 50, 194, 106, 255, 232, 255, 248, 4, 16, 12, 67, 0, 0, 0, 0}}
 	} else {
-		return gatt.Advertisement{}
+		return gatt.Advertisement{ManufacturerData: []byte{76, 0, 16, 5, 10, 16, 179, 176, 209}}
 	}
 }
 
@@ -36,12 +36,12 @@ func TestRuuviFormat(t *testing.T) {
 	var r RuuviSensorFormat
 	var err error
 	r, err = getRuuviSensorFormat(&aRAW)
-	if err != nil && r.Version() != FORMAT3 {
+	if r != nil && r.Version() != FORMAT3 {
 		t.Errorf("Format Version should be %d, but is %d instead.", FORMAT3, r.Version())
 	}
 
 	r, err = getRuuviSensorFormat(&aNONE)
-	if r != nil && r.Version() != FORMATUNKNOWN {
-		t.Errorf("Format Version should be %d, but is %d instead.", FORMATUNKNOWN, r.Version())
+	if err == nil {
+		t.Errorf("Expected error for wrong Sensor Data not thrown.")
 	}
 }

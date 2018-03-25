@@ -3,7 +3,6 @@ package ruuvi
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/paypal/gatt"
@@ -32,29 +31,31 @@ func getRuuviOperationMode(a *gatt.Advertisement) RuuviOperationMode {
 func getRuuviSensorFormat(a *gatt.Advertisement) (RuuviSensorFormat, error) {
 	var r RuuviSensorFormat
 	if getRuuviOperationMode(a) == RAW {
-		switch int(a.ManufacturerData[2]) {
+		switch a.ManufacturerData[2] {
 		case 3:
 			r = RuuviSensorFormat3{}
 		}
+		if r == nil {
+			return nil, errors.New("unknown Ruuvi Format")
+		}
 	} else {
-		return r, errors.New("unknown Ruuvi Operation Mode")
+		return nil, errors.New("unknown Ruuvi Operation Mode")
 	}
 	return r, nil
 }
 
 func getRuuviSensorData(a *gatt.Advertisement) (*RuuviSensorData, error) {
 	rsf, err := getRuuviSensorFormat(a)
-	if err != nil {
+	if err == nil {
 		return rsf.GetSensorData(a), nil
 	}
 	return nil, err
 }
 
 func onStateChanged(d gatt.Device, s gatt.State) {
-	fmt.Println("State:", s)
 	switch s {
 	case gatt.StatePoweredOn:
-		fmt.Println("scanning...")
+		log.Println("Scanning...")
 		d.Scan([]gatt.UUID{}, false)
 		return
 	default:
@@ -64,12 +65,15 @@ func onStateChanged(d gatt.Device, s gatt.State) {
 
 func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 	data, err := getRuuviSensorData(a)
-	if err != nil {
+	if err == nil {
 		newDataHandler(data)
+	} else {
+		//log.Println("Error reading sensor data: ", err)
 	}
 }
 
 func Init(fp func(*RuuviSensorData)) {
+	log.Println("Initialize ruuvi-go.")
 	d, err := gatt.NewDevice(option.DefaultClientOptions...)
 	if err != nil {
 		log.Fatalf("Failed to open device, err: %s\n", err)
