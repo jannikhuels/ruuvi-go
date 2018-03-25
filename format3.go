@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"log"
+	"time"
 
 	"github.com/paypal/gatt"
 )
@@ -54,6 +55,7 @@ func (s RuuviSensorFormat3) GetSensorData(a *gatt.Advertisement) *RuuviSensorDat
 	sensorData.AccelerationX = result.AccelerationX
 	sensorData.AccelerationY = result.AccelerationY
 	sensorData.AccelerationZ = result.AccelerationZ
+	sensorData.TimeStamp = time.Now()
 
 	return &sensorData
 }
